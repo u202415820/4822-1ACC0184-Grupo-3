@@ -1,0 +1,13 @@
+# Entorno virtual de Python
+.venv/
+
+# Archivos que genera Python al ejecutar
+__pycache__/
+*.pyc
+
+# Configuración privada de Streamlit
+.streamlit/secrets.toml
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
