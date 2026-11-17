@@ -1,0 +1,14 @@
+[theme]
+base = "light"
+primaryColor = "#eb6834"
+backgroundColor = "#e9edf1"
+secondaryBackgroundColor = "#f7f9fb"
+textColor = "#1f2933"
+font = "Arial, Helvetica, sans-serif"
+headingFont = "Arial, Helvetica, sans-serif"
+codeFont = "Arial, Helvetica, sans-serif"
+borderColor = "#cfd6dd"
+baseRadius = "4px"
+
+[client]
+toolbarMode = "minimal"
