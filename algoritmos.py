@@ -324,3 +324,33 @@ def sin_proteinas(G, quitar):
       if v not in quitar:
         G2[u].append(v)
   return G2
+
+
+def mejores_rutas(G, s, t, L, conf_min, k):
+  """Como rutas_guardando de la sección 17, pero con poda por confianza.
+  Guarda las rutas para mostrarlas en una tabla y devuelve las k más confiables."""
+  rutas = []
+  ruta = [s]
+  en_ruta = {s: True}
+
+  def bt(u, conf):
+    if u == t:
+      rutas.append((list(ruta), conf))   # aquí sí guardamos la ruta completa
+      return
+    if len(ruta) - 1 == L:
+      return
+    for v in G[u]:
+      if v in en_ruta:
+        continue
+      nueva = conf * peso[(u, v)] / 1000
+      if nueva < conf_min:
+        continue
+      ruta.append(v)
+      en_ruta[v] = True
+      bt(v, nueva)
+      ruta.pop()
+      del en_ruta[v]
+
+  bt(s, 1.0)
+  rutas.sort(key=lambda x: -x[1])        # de la más confiable a la menos
+  return rutas[:k]
