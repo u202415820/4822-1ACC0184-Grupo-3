@@ -81,10 +81,12 @@ def calcular_rutas(umbral, s, t, L, conf_min, bloquear_directa, quitar):
   t_ucs = time.perf_counter() - inicio
   alternativa, conf_alt = a.ucs(a.sin_arista(G, s, t), s, t)
 
+  # Poda previa: una interacción con puntaje/1000 < conf_min nunca puede estar en una ruta válida
   inicio = time.perf_counter()
-  n_rutas, cuenta, llamadas = a.rutas_backtracking(G, s, t, L, conf_min)
+  G_bt = {u: [v for v in G[u] if a.peso[(u, v)] / 1000 >= conf_min] for u in G}
+  n_rutas, cuenta, llamadas = a.rutas_backtracking(G_bt, s, t, L, conf_min)
   t_bt = time.perf_counter() - inicio
-  mejores = a.mejores_rutas(G, s, t, L, conf_min, 6)
+  mejores = a.mejores_rutas(G_bt, s, t, L, conf_min, 6)
 
   inicio = time.perf_counter()
   flujo = a.FordFulkerson(G, s, t)

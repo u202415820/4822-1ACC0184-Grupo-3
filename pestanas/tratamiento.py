@@ -37,7 +37,7 @@ def mostrar(red, umbral):
       ui.cabecera(f"{s} → {t} con el esquema {esquema.split(':')[0]}",
                   f"{antes['n_rutas']} → {despues['n_rutas']} rutas · L ≤ 3 · confianza ≥ 0,90")
       nodos, aristas = d.subgrafo_rutas(grafo, antes, s, t, [p for p in quitar if p in antes["cuenta"]])
-      colores = {x: ui.AZUL for x, n in antes["intermedias"]}
+      colores = {x: ui.AZUL for x in nodos}  # todas las intermedias en azul (también las de la alternativa)
       for p in quitar:
         colores[p] = ui.ROJO
       colores[s], colores[t] = ui.NARANJA, ui.MORADO

@@ -44,9 +44,9 @@ def mostrar(red, umbral):
         G_dib = a.sin_arista(grafo, s, t) if bloquear else grafo
         nodos, aristas = d.subgrafo_rutas(G_dib, r, s, t)
         maximo = max([n for x, n in r["intermedias"]], default=1)
-        tamanos = {x: 8 + 22 * n / maximo for x, n in r["intermedias"]}   # tamaño = n.º de rutas
+        tamanos = {x: 8 + 22 * r["cuenta"].get(x, 0) / maximo for x in nodos}   # tamaño = n.º de rutas
         tamanos[s], tamanos[t] = 22, 20
-        colores = {x: ui.AZUL for x, n in r["intermedias"]}
+        colores = {x: ui.AZUL for x in nodos}  # todas las intermedias en azul (también las de la alternativa)
         colores[s], colores[t] = ui.NARANJA, ui.MORADO
         estilos = {}
         for u, v in zip(r["alternativa"], r["alternativa"][1:]):
