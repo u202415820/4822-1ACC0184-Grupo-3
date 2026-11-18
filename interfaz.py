@@ -6,7 +6,7 @@ from pyvis.network import Network
 
 import algoritmos as a
 
-# ---------------------------------------------------------------- Colores (los mismos del Colab)
+# ---------------------------------------------------------------- Colores
 NARANJA = "#eb6834"   # proteína elegida, origen y dianas
 AZUL = "#2a78d6"      # nivel 1 / intermedias
 VERDE = "#1baf7a"     # nivel 2
@@ -17,7 +17,7 @@ GRIS = "#9aa5b1"      # resto
 ESTILO = """
 <style>
 html, body, .stApp, .stMarkdown, button, input, select, textarea, table { font-family: Arial, Helvetica, sans-serif; }
-.block-container { padding-top: 0.8rem; padding-bottom: 1rem; max-width: 1500px; }
+.block-container { padding-top: 0.8rem; padding-bottom: 1rem; padding-left: 2rem; padding-right: 2rem; max-width: 100%; }
 header[data-testid="stHeader"] { display: none; }
 .barra { background: #1f2a37; color: #e4e9ee; padding: 12px 20px; border-radius: 4px; display: flex;
          justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
@@ -103,7 +103,7 @@ def pills(ruta, s, t):
 
 
 # ---------------------------------------------------------------- Dibujo interactivo (pyvis)
-def dibujar(nodos, aristas, colores, etiquetas, tamanos=None, estilos=None, alto=520):
+def dibujar(nodos, aristas, colores, etiquetas, tamanos=None, estilos=None, alto=620):
   """nodos: proteínas · aristas: pares (u, v) · colores/tamanos: por proteína ·
   etiquetas: proteínas que muestran su nombre · estilos: por arista {color, width, dashes}."""
   tamanos = tamanos or {}
