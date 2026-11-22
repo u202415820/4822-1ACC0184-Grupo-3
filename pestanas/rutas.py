@@ -80,6 +80,9 @@ def mostrar(red, umbral):
                 f"<div class='nota'>{texto} · <b>{len(r['ruta_mst']) - 1} pasos</b>. "
                 "El árbol conserva un solo camino: sirve para ver la red, no para buscar rutas.</div>")
       st.divider()
+      ui.html(f"<b style='font-size:13px'>Rutas encontradas (backtracking)</b><div class='dato'>{r['n_rutas']}</div>"
+              f"<div class='nota'>De hasta {L} interacciones y confianza ≥ {ui.coma(conf_min, 2)}. La tabla de abajo muestra las más confiables.</div>")
+      st.divider()
       ui.html("<b style='font-size:13px'>Intermedias más frecuentes</b>")
       if r["intermedias"]:
         maximo = r["intermedias"][0][1]
