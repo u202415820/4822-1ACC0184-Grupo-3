@@ -1,6 +1,7 @@
 # Pestaña 1 · Explorar: la red alrededor de una proteína (BFS) o el esqueleto (MST, Kruskal),
 # con la ficha de la proteína.
 
+import re
 import time
 
 import streamlit as st
@@ -9,6 +10,13 @@ import algoritmos as a
 import datos as d
 import fuentes as f
 import interfaz as ui
+
+
+def funcion_corta(texto):
+  """Primera parte legible de la descripción de STRING (sin longitudes ni datos de secuencia)."""
+  texto = re.sub(r"^.*?len: \d+ aa\.\s*", "", texto)      # quita "Rv1808, (MTV049.30), len: 409 aa."
+  texto = re.split(r";|\s\(", texto)[0].strip()
+  return texto if len(texto) <= 80 else texto[:77] + "…"
 
 
 def mostrar(red, umbral):
@@ -87,11 +95,39 @@ def mostrar(red, umbral):
       m1, m2 = st.columns(2)
       m1.metric("Vecinas en la red", len(grafo[p]))
       m2.metric("Vecinas en el MST", len(red["mst"][p]))
+      i = red["componente_de"][p]
+      tam = len(red["lista_componentes"][i])
+      ui.html(f"<div class='nota'><b>Componente conexa:</b> "
+              f"{'la principal' if i == 0 else 'una pequeña'}, con {ui.miles(tam)} proteínas.</div>")
       farmacos = d.farmacos_de(p)
       ui.html(f"<div class='nota'><b>Fármacos asociados (OMS, 2021):</b> {', '.join(farmacos) if farmacos else '—'}</div>")
       vecinas = sorted(grafo[p], key=lambda v: -a.peso[(p, v)])[:6]
       ui.html("<div style='height:8px'></div>")
       ui.tabla(["Vecinas más confiables", "Puntaje"], [[v, a.peso[(p, v)]] for v in vecinas], numericas=(1,))
+
+  # ---------------------------------------------------------------- Componentes conexas
+  comps = red["lista_componentes"]
+  with st.expander(f"Las {len(comps)} componentes conexas (BFS)"):
+    principal = len(comps[0])
+    chicas = comps[1:]
+    tamanos_chicas = {}
+    for c in chicas:
+      tamanos_chicas[len(c)] = tamanos_chicas.get(len(c), 0) + 1
+    resumen = ", ".join(f"{n} de {k} proteínas" for k, n in sorted(tamanos_chicas.items()))
+    ui.html(f"<div class='nota'>Una componente conexa es un grupo de proteínas conectadas entre sí, directa o "
+            f"indirectamente, sin ninguna interacción con el resto de la red. Se calculan con BFS: cada recorrido "
+            f"desde una proteína no visitada encuentra una componente completa.<br><br>"
+            f"Con umbral {umbral}, la <b>principal</b> tiene {ui.miles(principal)} proteínas "
+            f"({ui.coma(100 * principal / len(grafo), 1)} %), y ahí están todas las dianas y proteínas de resistencia. "
+            f"Las otras {len(chicas)} son pequeñas ({resumen}): proteínas que interactúan entre sí, pero no tienen "
+            f"interacciones con puntaje ≥ {umbral} con el resto.</div>")
+    if chicas:
+      limite = 60
+      ui.tabla(["#", "Proteínas", "Función de la primera (STRING)"],
+               [[k + 2, ", ".join(sorted(c)), funcion_corta(desc.get(sorted(c)[0], ""))] for k, c in enumerate(chicas[:limite])],
+               numericas=(0,))
+      if len(chicas) > limite:
+        ui.html(f"<div class='nota'>… y {len(chicas) - limite} componentes pequeñas más.</div>")
 
   with st.expander("Algoritmo y costo", expanded=True):
     ui.tabla(["Algoritmo", "Complejidad", "Tiempo"], [

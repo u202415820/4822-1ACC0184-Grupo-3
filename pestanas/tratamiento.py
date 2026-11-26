@@ -26,6 +26,12 @@ def mostrar(red, umbral):
       quitar = d.bloqueadas(esquema, s, t)
       ui.html("<b style='font-size:12px'>Proteínas bloqueadas</b><br>" +
               "".join(f"<span class='chip'>{p}</span>" for p in quitar))
+      # El origen o el destino pueden ser dianas del esquema: no se bloquean, y se avisa
+      dianas = {p for farmaco in f.ESQUEMAS[esquema] for p in f.PROTEINAS[farmaco]}
+      for x, rol in ((s, "el origen"), (t, "el destino")):
+        if x in dianas:
+          ui.html(f"<div class='nota' style='margin-top:6px'><b>{x}</b> es diana de un fármaco del esquema, "
+                  f"pero como es {rol} no se bloquea: si se bloqueara, no quedaría ninguna ruta que comparar.</div>")
 
   with st.spinner("Simulando..."):
     antes = d.calcular_rutas(umbral, s, t, 3, 0.90, False, ())
@@ -36,7 +42,12 @@ def mostrar(red, umbral):
     with st.container(border=True):
       ui.cabecera(f"{s} → {t} con el esquema {esquema.split(':')[0]}",
                   f"{antes['n_rutas']} → {despues['n_rutas']} rutas · L ≤ 3 · confianza ≥ 0,90")
-      nodos, aristas = d.subgrafo_rutas(grafo, antes, s, t, [p for p in quitar if p in antes["cuenta"]])
+      if antes["n_rutas"] == 0:
+        ui.html(f"<div class='nota'>Con L ≤ 3 y confianza ≥ 0,90 no hay rutas alternativas entre {s} y {t}: "
+                "la comparación se hace con la ruta UCS y los caminos independientes (Ford-Fulkerson).</div>")
+      # Se dibujan también la ruta UCS de después (puede pasar por otras proteínas) y las bloqueadas que estaban en rutas
+      extra = [p for p in quitar if p in antes["cuenta"] or p in antes["ruta"]] + list(despues["ruta"])
+      nodos, aristas = d.subgrafo_rutas(grafo, antes, s, t, extra)
       colores = {x: ui.AZUL for x in nodos}  # todas las intermedias en azul (también las de la alternativa)
       for p in quitar:
         colores[p] = ui.ROJO
@@ -72,18 +83,30 @@ def mostrar(red, umbral):
       ui.cabecera("Antes y después")
       x0 = antes["intermedias"][0][0] if antes["intermedias"] else None
       filas = [
-        ["Ruta UCS", ui.coma(antes["conf"]), ui.coma(despues["conf"])],
-        ["Rutas alternativas", antes["n_rutas"], despues["n_rutas"]],
-        ["Caminos independientes", antes["flujo"], despues["flujo"]],
+        ["Confianza de la ruta UCS", ui.coma(antes["conf"]), ui.coma(despues["conf"])],
+        ["Rutas (backtracking)", antes["n_rutas"], despues["n_rutas"]],
+        ["Caminos independientes (Ford-Fulkerson)", antes["flujo"], despues["flujo"]],
       ]
       if x0:
         filas.append([f"Rutas con {x0}", antes["cuenta"].get(x0, 0), despues["cuenta"].get(x0, 0)])
       ui.tabla(["", "Antes", "Después"], filas, numericas=(1, 2))
       st.divider()
-      igual = antes["ruta"] == despues["ruta"]
-      texto = (f"La ruta más confiable {'no cambia' if igual else 'cambia a ' + ' → '.join(despues['ruta'])}. "
-               f"El esquema elimina {antes['n_rutas'] - despues['n_rutas']} de {antes['n_rutas']} rutas alternativas.")
-      if x0 and x0 not in quitar:
+      if not despues["ruta"]:
+        texto = f"Ya no queda ninguna ruta entre {s} y {t}. "
+      elif antes["ruta"] == despues["ruta"]:
+        texto = "La ruta más confiable no cambia. "
+      else:
+        texto = f"La ruta más confiable cambia a {' → '.join(despues['ruta'])}. "
+      if antes["n_rutas"]:
+        texto += f"El esquema elimina {antes['n_rutas'] - despues['n_rutas']} de {antes['n_rutas']} rutas. "
+      else:
+        texto += "No hay rutas alternativas con estos parámetros. "
+      if antes["flujo"] != despues["flujo"]:
+        texto += (f"Los caminos independientes bajan de {antes['flujo']} a {despues['flujo']}: ahora bastaría cortar "
+                  f"{despues['flujo']} interacciones para separar {s} de {t}.")
+      else:
+        texto += f"Los caminos independientes no cambian ({antes['flujo']})."
+      if x0 and x0 not in quitar and antes["n_rutas"]:
         texto += (f" <b>{x0}</b> sigue en {despues['cuenta'].get(x0, 0)} de las {despues['n_rutas']} restantes: "
                   "ningún fármaco del esquema la bloquea.")
       ui.html(f"<b style='font-size:13px'>Qué muestra</b><div class='nota'>{texto}</div>")
@@ -92,7 +115,9 @@ def mostrar(red, umbral):
               "El origen y el destino nunca se bloquean.</div>")
 
   with st.expander("Algoritmo y costo", expanded=True):
-    ui.tabla(["Paso", "Complejidad"], [
-      ["Quitar las proteínas del esquema (sin_proteinas)", "O(|V| + |E|)"],
-      ["UCS, backtracking y Ford-Fulkerson, antes y después", "Las de cada algoritmo"],
-    ])
+    ui.tabla(["Paso", "Complejidad", "Tiempo (después)"], [
+      ["Quitar las proteínas del esquema (sin_proteinas)", "O(|V| + |E|)", "–"],
+      ["UCS → confianza de la ruta más confiable", "O((|V| + |E|) log |V|)", ui.duracion(despues["t_ucs"])],
+      ["Backtracking → rutas que quedan", "O(Δ^L)", ui.duracion(despues["t_bt"])],
+      ["Ford-Fulkerson → caminos independientes", "O(f · (|V| + |E|))", ui.duracion(despues["t_ff"])],
+    ], numericas=(2,))

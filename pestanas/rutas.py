@@ -76,6 +76,10 @@ def mostrar(red, umbral):
       m1.metric("Rutas encontradas", r["n_rutas"], help=f"Backtracking: rutas de hasta {L} interacciones "
                 f"con confianza ≥ {ui.coma(conf_min, 2)}")
       m2.metric("Caminos independientes", r["flujo"], help="Ford-Fulkerson: rutas que no comparten interacciones")
+      ui.html(f"<div class='nota'><b>Rutas:</b> las que encuentra el backtracking. "
+              f"<b>Caminos independientes:</b> Ford-Fulkerson cuenta las rutas que no comparten ninguna interacción; "
+              f"es el mínimo de interacciones que habría que cortar para separar {s} de {t}. "
+              f"Nunca supera el grado menor ({s} {len(grafo[s])} · {t} {len(grafo[t])}).</div>")
       st.divider()
       ui.html("<b style='font-size:13px'>Intermedias más frecuentes</b>")
       if r["intermedias"]:
@@ -101,13 +105,10 @@ def mostrar(red, umbral):
         ui.html(f"<b style='font-size:13px'>La misma conexión en el esqueleto (MST)</b>"
                 f"<div class='nota'>{texto} · <b>{len(r['ruta_mst']) - 1} pasos</b>. "
                 "El árbol conserva un solo camino: sirve para ver la red, no para buscar rutas.</div>")
-      st.divider()
-      ui.html(f"<div class='nota'>Caminos independientes: grados {s} {len(grafo[s])} · {t} {len(grafo[t])}. "
-              "El flujo nunca supera el grado menor.</div>")
 
   with st.expander("Algoritmo y costo", expanded=True):
     ui.tabla(["Algoritmo", "Complejidad", "Llamadas", "Tiempo"], [
-      ["UCS (costo −ln(puntaje/1000))", "O((|V| + |E|) log |V|)", "–", ui.duracion(r["t_ucs"])],
-      ["Backtracking con poda", "O(Δ^L)", ui.miles(r["llamadas"]), ui.duracion(r["t_bt"])],
-      ["Ford-Fulkerson", "O(f · (|V| + |E|))", "–", ui.duracion(r["t_ff"])],
+      ["UCS → ruta más confiable (costo −ln(puntaje/1000))", "O((|V| + |E|) log |V|)", "–", ui.duracion(r["t_ucs"])],
+      ["Backtracking con poda → rutas encontradas e intermedias", "O(Δ^L)", ui.miles(r["llamadas"]), ui.duracion(r["t_bt"])],
+      ["Ford-Fulkerson → caminos independientes", "O(f · (|V| + |E|))", "–", ui.duracion(r["t_ff"])],
     ], numericas=(2, 3))
