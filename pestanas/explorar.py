@@ -27,7 +27,7 @@ def mostrar(red, umbral):
       if vista.startswith("Red"):
         niveles = st.slider("Niveles alrededor de la proteína", 1, 2, 1)
       else:
-        pasos = st.slider("Pasos dentro del árbol", 2, 12, 6)
+        pasos = st.slider("Pasos dentro del árbol", 2, 12, 4)
 
   # ---------------------------------------------------------------- Grafo
   with centro:
@@ -55,21 +55,28 @@ def mostrar(red, umbral):
         path, nivel = a.bfs(red["mst"], p, max_nivel=pasos)
         t_bfs = time.perf_counter() - inicio
         aristas = [(u, v) for u in nivel for v in red["mst"][u] if v in nivel and u < v]
-        colores, etiquetas = {}, {p}
+        colores, etiquetas, tamanos = {}, {p}, {p: 24}
+        for v in nivel:                        # como en la red completa: nivel 1 azul, nivel 2 verde
+          if nivel[v] == 1:
+            colores[v], tamanos[v] = ui.AZUL, 14
+            etiquetas.add(v)                   # las vecinas directas en el árbol llevan su nombre
+          elif nivel[v] == 2:
+            colores[v], tamanos[v] = ui.VERDE, 9
         for lista in f.PROTEINAS.values():     # dianas de fármacos en naranja
           for x in lista:
             if x in nivel:
               colores[x] = ui.NARANJA
               etiquetas.add(x)
         for x in f.DESTINOS:                   # proteínas de resistencia en morado
-          if x in nivel and x not in colores:
+          if x in nivel and colores.get(x) != ui.NARANJA:
             colores[x] = ui.MORADO
             etiquetas.add(x)
         colores[p] = ui.NARANJA
         ui.cabecera(f"Esqueleto alrededor de {p} · {pasos} pasos", f"{ui.miles(len(nivel))} proteínas")
-        ui.dibujar(nivel.keys(), aristas, colores, etiquetas)
+        ui.dibujar(nivel.keys(), aristas, colores, etiquetas, tamanos)
         ui.leyenda([(ui.NARANJA, "Dianas de fármacos", "punto"), (ui.MORADO, "Proteínas de resistencia", "punto"),
-                    (ui.GRIS, "Otras", "punto")])
+                    (ui.AZUL, "A 1 paso en el árbol", "punto"), (ui.VERDE, "A 2 pasos", "punto"),
+                    (ui.GRIS, "Más lejanas", "punto")])
       ui.html("<div class='nota'>Zoom con la rueda · arrastra los nodos · pasa el mouse sobre una interacción para ver su puntaje.</div>")
 
   # ---------------------------------------------------------------- Ficha de la proteína

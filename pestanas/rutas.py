@@ -24,7 +24,11 @@ def mostrar(red, umbral):
       t = st.selectbox("Proteína de resistencia (destino)", destinos,
                        index=destinos.index("katG") if "katG" in destinos else 0)
       L = st.slider("Longitud máxima L", 1, 4, 3, help="Con L = 4 el backtracking puede tardar varios segundos")
-      conf_min = st.slider("Confianza mínima de la ruta", 0.80, 1.00, 0.90, 0.01)
+      conf_min = st.slider("Confianza mínima de la ruta", 0.80, 1.00, 0.90, 0.01,
+                           help="El umbral filtra cada interacción por separado. Este valor filtra la ruta completa: "
+                                "su confianza es el producto de los puntajes de sus interacciones "
+                                "(por ejemplo, 0,75 × 0,75 × 0,75 = 0,42). Las rutas por debajo se descartan.")
+      ui.html("<div class='nota'>Confianza de una ruta = producto de los puntajes de sus interacciones / 1000.</div>")
       bloquear = st.checkbox("Bloquear la interacción directa")
 
   if s not in grafo or t not in grafo:
@@ -68,20 +72,10 @@ def mostrar(red, umbral):
   with der:
     with st.container(border=True):
       ui.cabecera("Resultados")
-      if r["ruta"]:
-        ui.html(f"<b style='font-size:13px'>Ruta más confiable (UCS)</b><br>{ui.pills(r['ruta'], s, t)}"
-                f"<div class='nota'>confianza {ui.coma(r['conf'])} · {len(r['ruta']) - 1} interacción(es)</div>")
-        if r["alternativa"]:
-          ui.html(f"<div class='nota' style='margin-top:6px'>Si se bloquea: <b>{' → '.join(r['alternativa'])}</b> · {ui.coma(r['conf_alt'])}</div>")
-      st.divider()
-      if r["ruta_mst"]:
-        texto = " → ".join(r["ruta_mst"]) if len(r["ruta_mst"]) <= 6 else " → ".join(r["ruta_mst"][:3]) + " → … → " + t
-        ui.html(f"<b style='font-size:13px'>La misma conexión en el esqueleto (MST)</b>"
-                f"<div class='nota'>{texto} · <b>{len(r['ruta_mst']) - 1} pasos</b>. "
-                "El árbol conserva un solo camino: sirve para ver la red, no para buscar rutas.</div>")
-      st.divider()
-      ui.html(f"<b style='font-size:13px'>Rutas encontradas (backtracking)</b><div class='dato'>{r['n_rutas']}</div>"
-              f"<div class='nota'>De hasta {L} interacciones y confianza ≥ {ui.coma(conf_min, 2)}. La tabla de abajo muestra las más confiables.</div>")
+      m1, m2 = st.columns(2)
+      m1.metric("Rutas encontradas", r["n_rutas"], help=f"Backtracking: rutas de hasta {L} interacciones "
+                f"con confianza ≥ {ui.coma(conf_min, 2)}")
+      m2.metric("Caminos independientes", r["flujo"], help="Ford-Fulkerson: rutas que no comparten interacciones")
       st.divider()
       ui.html("<b style='font-size:13px'>Intermedias más frecuentes</b>")
       if r["intermedias"]:
@@ -96,8 +90,20 @@ def mostrar(red, umbral):
       else:
         ui.html("<div class='nota'>No hay rutas con intermedias para estos parámetros.</div>")
       st.divider()
-      ui.html(f"<b style='font-size:13px'>Caminos independientes (Ford-Fulkerson)</b><div class='dato'>{r['flujo']}</div>"
-              f"<div class='nota'>Grados: {s} {len(grafo[s])} · {t} {len(grafo[t])}. El flujo nunca supera el grado menor.</div>")
+      if r["ruta"]:
+        ui.html(f"<b style='font-size:13px'>Ruta más confiable (UCS)</b><br>{ui.pills(r['ruta'], s, t)}"
+                f"<div class='nota'>confianza {ui.coma(r['conf'])} · {len(r['ruta']) - 1} interacción(es)</div>")
+        if r["alternativa"]:
+          ui.html(f"<div class='nota' style='margin-top:6px'>Si se bloquea: <b>{' → '.join(r['alternativa'])}</b> · {ui.coma(r['conf_alt'])}</div>")
+      st.divider()
+      if r["ruta_mst"]:
+        texto = " → ".join(r["ruta_mst"]) if len(r["ruta_mst"]) <= 6 else " → ".join(r["ruta_mst"][:3]) + " → … → " + t
+        ui.html(f"<b style='font-size:13px'>La misma conexión en el esqueleto (MST)</b>"
+                f"<div class='nota'>{texto} · <b>{len(r['ruta_mst']) - 1} pasos</b>. "
+                "El árbol conserva un solo camino: sirve para ver la red, no para buscar rutas.</div>")
+      st.divider()
+      ui.html(f"<div class='nota'>Caminos independientes: grados {s} {len(grafo[s])} · {t} {len(grafo[t])}. "
+              "El flujo nunca supera el grado menor.</div>")
 
   with st.expander("Algoritmo y costo", expanded=True):
     ui.tabla(["Algoritmo", "Complejidad", "Llamadas", "Tiempo"], [
