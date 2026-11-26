@@ -13,6 +13,7 @@ VERDE = "#1baf7a"     # nivel 2
 MORADO = "#8e44ad"    # proteínas de resistencia (destino)
 ROJO = "#c0392b"      # bloqueadas por un esquema
 GRIS = "#9aa5b1"      # resto
+RESALTE = "#1f2933"   # interacción bajo el mouse
 
 ESTILO = """
 <style>
@@ -115,16 +116,17 @@ def dibujar(nodos, aristas, colores, etiquetas, tamanos=None, estilos=None, alto
                  font={"face": "Arial", "size": 14, "color": "#1f2933"})
   for u, v in aristas:
     e = estilos.get((u, v)) or estilos.get((v, u)) or {}
-    net.add_edge(u, v, title=f"{u} – {v}: {a.peso[(u, v)]}", color=e.get("color", "#c3cad3"),
+    base = e.get("color", "#c3cad3")
+    net.add_edge(u, v, title=f"{u} – {v}: {a.peso[(u, v)]}",
+                 color={"color": base, "hover": RESALTE, "highlight": RESALTE},
                  width=e.get("width", 1), dashes=e.get("dashes", False))
   net.set_options("""
   { "physics": {"solver": "forceAtlas2Based", "stabilization": {"iterations": 300}},
-    "edges": {"smooth": false},
-    "interaction": {"hover": true, "tooltipDelay": 80} }
+    "edges": {"smooth": false, "hoverWidth": 2.5, "selectionWidth": 2.5},
+    "interaction": {"hover": true, "hoverConnectedEdges": true, "selectConnectedEdges": true,
+                    "tooltipDelay": 80} }
   """)
   pagina = net.generate_html()
-  # 1) Cuando termina de acomodarse, se apaga la física: el grafo deja de moverse.
-  # 2) Las pestañas ocultas dibujan el grafo con ancho 0: al mostrarse, se vuelve a centrar.
   pagina = pagina.replace("</body>", """
 <script>
 function centrar() { if (typeof network !== "undefined") { network.redraw(); network.fit(); } }
