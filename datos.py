@@ -17,10 +17,13 @@ def cargar_red(umbral):
   inicio = time.perf_counter()
   arbol = a.kruskal(grafo)
   t_kruskal = time.perf_counter() - inicio
+  comps = sorted(a.componentes_conexas(grafo, "bfs"), key=len, reverse=True)
   return {
     "grafo": grafo, "peso": peso, "labels": a.labels, "w2i": a.w2i,
     "arbol": arbol, "mst": a.lista_adyacencia(grafo, arbol), "t_kruskal": t_kruskal,
-    "componentes": len(a.componentes_conexas(grafo, "bfs")),
+    "componentes": len(comps),
+    "lista_componentes": comps,                                    # de la más grande a la más chica
+    "componente_de": {v: i for i, c in enumerate(comps) for v in c},
   }
 
 

@@ -24,10 +24,13 @@ red = d.cargar_red(umbral)
 d.activar(red)
 grafo = red["grafo"]
 col_cifras.markdown(
-  f"<div class='cifras'><span><b>{ui.miles(len(grafo))}</b> proteínas</span>"
-  f"<span><b>{ui.miles(a.contar_aristas(grafo))}</b> interacciones</span>"
-  f"<span><b>{red['componentes']}</b> componentes conexas</span>"
-  f"<span><b>{ui.miles(len(red['arbol']))}</b> interacciones en el MST</span></div>", unsafe_allow_html=True)
+  f"<div class='cifras'>"
+  f"<span title='Proteínas con al menos una interacción de puntaje ≥ {umbral}'><b>{ui.miles(len(grafo))}</b> proteínas</span>"
+  f"<span title='Interacciones con puntaje ≥ {umbral}'><b>{ui.miles(a.contar_aristas(grafo))}</b> interacciones</span>"
+  f"<span title='Grupos de proteínas conectadas entre sí y sin interacciones con el resto. "
+  f"Detalle en Explorar → Componentes conexas'><b>{red['componentes']}</b> componentes conexas</span>"
+  f"<span title='Interacciones del árbol de expansión mínima (Kruskal)'><b>{ui.miles(len(red['arbol']))}</b> interacciones en el MST</span>"
+  f"</div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------- Pestañas
 tab_explorar, tab_rutas, tab_tratamiento = st.tabs(["Explorar", "Rutas", "Tratamiento"])
